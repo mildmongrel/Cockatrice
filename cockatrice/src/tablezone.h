@@ -21,12 +21,17 @@ signals:
 
 private:
     static const int BOX_LINE_WIDTH = 10;
-    static const int PADDING_X  = 35;
-    static const int PADDING_Y = 10;
-    static const int MARGIN_X = 20;
     static const int MIN_WIDTH = 10 * CARD_WIDTH / 2;
     static const int TABLEROWS = 3;
-    
+
+    /*
+    Margins between table edges and cards, paddings between cards
+    */
+    static const int MARGIN_X_LEFT = 20;
+    static const int MARGIN_X_RIGHT = 5;
+    static const int PADDING_X  = 35;
+    static const int PADDING_Y = 10;
+
     /*
     Default background color, inactive mask and boarder gradient 
     */
@@ -137,7 +142,7 @@ public:
     void resizeToContents();
 
     int getMinimumWidth() const { return currentMinimumWidth; }
-    void setWidth(qreal _width){ prepareGeometryChange(); width = _width;};
+    void setWidth(qreal _width) { prepareGeometryChange(); width = _width; }
     qreal getWidth() const { return width; }
     void setActive(bool _active) { active = _active; update(); }
 

@@ -32,7 +32,7 @@ TableZone::TableZone(Player *_p, QGraphicsItem *parent)
     updateBgPixmap();
 
     height = 2 * BOX_LINE_WIDTH + TABLEROWS * (CARD_HEIGHT + 20) + 2 * PADDING_Y;
-    width = MIN_WIDTH + 2 * MARGIN_X + 2 * BOX_LINE_WIDTH;
+    width = MIN_WIDTH + MARGIN_X_LEFT + MARGIN_X_RIGHT + 2 * BOX_LINE_WIDTH;
     currentMinimumWidth = MIN_WIDTH;
 
     setCacheMode(DeviceCoordinateCache);
@@ -277,7 +277,7 @@ void TableZone::resizeToContents()
     xMax += 2 * CARD_WIDTH;
     if (xMax < MIN_WIDTH)
         xMax = MIN_WIDTH;
-    currentMinimumWidth = xMax + 2 * MARGIN_X + 2 * BOX_LINE_WIDTH;
+    currentMinimumWidth = xMax + MARGIN_X_LEFT + MARGIN_X_RIGHT + 2 * BOX_LINE_WIDTH;
     if (currentMinimumWidth != width) {
         prepareGeometryChange();
         width = currentMinimumWidth;
@@ -294,6 +294,7 @@ CardItem *TableZone::getCardFromGrid(const QPoint &gridPoint) const
     return 0;
 }
 
+
 CardItem *TableZone::getCardFromCoords(const QPointF &point) const
 {
     QPoint gridPoint = mapToGrid(point);
@@ -304,7 +305,7 @@ CardItem *TableZone::getCardFromCoords(const QPointF &point) const
 QPointF TableZone::mapFromGrid(QPoint gridPoint) const
 {
     qreal x, y;
-    x = MARGIN_X + (gridPoint.x() % 3) * CARD_WIDTH / 3.0;
+    x = MARGIN_X_LEFT + (gridPoint.x() % 3) * CARD_WIDTH / 3.0;
     for (int i = 0; i < gridPoint.x() / 3; ++i)
         x += gridPointWidth.value(gridPoint.y() * 1000 + i, CARD_WIDTH) + PADDING_X;
     
@@ -322,7 +323,7 @@ QPointF TableZone::mapFromGrid(QPoint gridPoint) const
 
 QPoint TableZone::mapToGrid(const QPointF &mapPoint) const
 {
-    qreal x = mapPoint.x() - MARGIN_X;
+    qreal x = mapPoint.x() - MARGIN_X_LEFT;
     qreal y = mapPoint.y();
 /*    if (isInverted())
         y = height - y;
@@ -330,8 +331,8 @@ QPoint TableZone::mapToGrid(const QPointF &mapPoint) const
     
     if (x < 0)
         x = 0;
-    else if (x > width - CARD_WIDTH - MARGIN_X)
-        x = width - CARD_WIDTH - MARGIN_X;
+    else if (x > width - CARD_WIDTH - MARGIN_X_LEFT)
+        x = width - CARD_WIDTH - MARGIN_X_LEFT;
     if (y < 0)
         y = 0;
     else if (y > height - CARD_HEIGHT)
