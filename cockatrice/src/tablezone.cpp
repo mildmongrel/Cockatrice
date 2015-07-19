@@ -2,6 +2,7 @@
 #include <QSet>
 #include <QGraphicsScene>
 #include <cmath>
+#include <QDebug>
 #ifdef _WIN32
 #include "round.h"
 #endif /* _WIN32 */
@@ -31,8 +32,9 @@ TableZone::TableZone(Player *_p, QGraphicsItem *parent)
 
     updateBgPixmap();
 
-    height = 2 * BOX_LINE_WIDTH + TABLEROWS * (CARD_HEIGHT + 20) + 2 * PADDING_Y;
-    width = MIN_WIDTH + MARGIN_X_LEFT + MARGIN_X_RIGHT + 2 * BOX_LINE_WIDTH;
+//    height = 2 * BOX_LINE_WIDTH + TABLEROWS * (CARD_HEIGHT + 20) + 2 * PADDING_Y;
+    height = MARGIN_TOP + MARGIN_BOTTOM + 2 * BOX_LINE_WIDTH + TABLEROWS * CARD_HEIGHT + (TABLEROWS-1) * PADDING_Y;
+    width = MIN_WIDTH + MARGIN_LEFT + MARGIN_RIGHT + 2 * BOX_LINE_WIDTH;
     currentMinimumWidth = MIN_WIDTH;
 
     setCacheMode(DeviceCoordinateCache);
@@ -169,6 +171,7 @@ void TableZone::reorganizeCards()
     QMap<int, int> gridPointStackCount;
     for (int i = 0; i < cards.size(); ++i) {
         const QPoint &gridPoint = cards[i]->getGridPos();
+qDebug() << "TableZone::reorganizeCards i=" << i << ", gridX=" << gridPoint.x() << ", gridY=" << gridPoint.y() << ", isInverted()=" << isInverted();
         if (gridPoint.x() == -1)
             continue;
         
@@ -277,7 +280,7 @@ void TableZone::resizeToContents()
     xMax += 2 * CARD_WIDTH;
     if (xMax < MIN_WIDTH)
         xMax = MIN_WIDTH;
-    currentMinimumWidth = xMax + MARGIN_X_LEFT + MARGIN_X_RIGHT + 2 * BOX_LINE_WIDTH;
+    currentMinimumWidth = xMax + MARGIN_LEFT + MARGIN_RIGHT + 2 * BOX_LINE_WIDTH;
     if (currentMinimumWidth != width) {
         prepareGeometryChange();
         width = currentMinimumWidth;
@@ -305,14 +308,31 @@ CardItem *TableZone::getCardFromCoords(const QPointF &point) const
 QPointF TableZone::mapFromGrid(QPoint gridPoint) const
 {
     qreal x, y;
-    x = MARGIN_X_LEFT + (gridPoint.x() % 3) * CARD_WIDTH / 3.0;
+
+    // Start with margin plus stacked card offset
+    x = MARGIN_LEFT + BOX_LINE_WIDTH + (gridPoint.x() % 3) * STACKED_CARD_OFFSET_X;
+
+    // Add in width of grid point plus padding for each column
     for (int i = 0; i < gridPoint.x() / 3; ++i)
         x += gridPointWidth.value(gridPoint.y() * 1000 + i, CARD_WIDTH) + PADDING_X;
     
     if (isInverted())
+#if 0
         gridPoint.setY(2 - gridPoint.y());
+#else
+        gridPoint.setY(TABLEROWS - 1 - gridPoint.y());
+#endif
     
+#if 0
     y = BOX_LINE_WIDTH + gridPoint.y() * (CARD_HEIGHT + PADDING_Y + 20) + (gridPoint.x() % TABLEROWS) * 10;
+#else
+    // Start with margin plus stacked card offset
+    y = MARGIN_TOP + BOX_LINE_WIDTH + (gridPoint.x() % 3) * STACKED_CARD_OFFSET_Y;
+
+    // Add in card size and padding for each row
+    for (int i = 0; i < gridPoint.y(); ++i)
+        y += CARD_HEIGHT + PADDING_Y;
+#endif
 /*    
     if (isInverted())
         y = height - CARD_HEIGHT - y;
@@ -321,6 +341,7 @@ QPointF TableZone::mapFromGrid(QPoint gridPoint) const
 }
 
 
+#if 0
 QPoint TableZone::mapToGrid(const QPointF &mapPoint) const
 {
     qreal x = mapPoint.x() - MARGIN_X_LEFT;
@@ -338,7 +359,8 @@ QPoint TableZone::mapToGrid(const QPointF &mapPoint) const
     else if (y > height - CARD_HEIGHT)
         y = height - CARD_HEIGHT;
     
-    int resultY = round(y / (CARD_HEIGHT + PADDING_Y + 20));
+//    int resultY = round(y / (CARD_HEIGHT + PADDING_Y + 20));
+    int resultY = round(y / (CARD_HEIGHT + PADDING_Y));
     if (isInverted())
         resultY = TABLEROWS - 1 - resultY;
 
@@ -354,6 +376,60 @@ QPoint TableZone::mapToGrid(const QPointF &mapPoint) const
     int resultX = baseX * 3 + qMin((int) floor(xdiff * 3 / CARD_WIDTH), 2);
     return QPoint(resultX, resultY);
 }
+#else
+QPoint TableZone::mapToGrid(const QPointF &mapPoint) const
+{
+    // TODO: can this whole function be done with a QPoint instead of two ints?
+    int x = mapPoint.x();
+    int y = mapPoint.y();
+    
+    // Bound point within grid area.  The maximums include a length of card to
+    // disallow placing a card too far beyond the table.
+    // TODO - is there a method in QPoint for this?
+    const int xBoundMin = MARGIN_LEFT + BOX_LINE_WIDTH;
+    const int xBoundMax = width - (CARD_WIDTH + MARGIN_RIGHT + BOX_LINE_WIDTH);
+    const int yBoundMin = MARGIN_TOP + BOX_LINE_WIDTH;
+    const int yBoundMax = height - (CARD_HEIGHT + MARGIN_BOTTOM + BOX_LINE_WIDTH);
+
+    if (x < xBoundMin)
+        x = xBoundMin;
+    else if (x > xBoundMax)
+        x = xBoundMax;
+    if (y < yBoundMin)
+        y = yBoundMin;
+    else if (y > yBoundMax)
+        y = yBoundMax;
+
+    // Offset point by the boundary values to reference point within grid area.
+    x -= xBoundMin;
+    y -= yBoundMin;
+    
+    // Offset point by half the distance between grid points to effectively
+    // "round" to the nearest grid point in below calculations.
+    x += (CARD_WIDTH + PADDING_X) / 2;
+    y += (CARD_HEIGHT + PADDING_Y) / 2;
+
+    int resultY = y / (CARD_HEIGHT + PADDING_Y);
+    resultY = clampValidTableRow(resultY);
+
+    if (isInverted())
+        resultY = TABLEROWS - 1 - resultY;
+
+    // Walk grid point widths and accumulate the amount until we reach our point.
+    int baseX = -1;
+    int oldTempX = 0, tempX = 0;
+    do {
+        ++baseX;
+        oldTempX = tempX;
+        tempX += gridPointWidth.value(resultY * 1000 + baseX, CARD_WIDTH) + PADDING_X;
+    } while (tempX < x + 1);
+    
+    int xdiff = x - oldTempX;
+    int resultX = baseX * 3 + qMin((int) floor(xdiff * 3 / CARD_WIDTH), 2);
+
+    return QPoint(resultX, resultY);
+}
+#endif
 
 
 QPointF TableZone::closestGridPoint(const QPointF &point)

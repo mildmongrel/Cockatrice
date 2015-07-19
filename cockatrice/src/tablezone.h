@@ -20,17 +20,29 @@ signals:
     void sizeChanged();
 
 private:
-    static const int BOX_LINE_WIDTH = 10;
     static const int MIN_WIDTH = 10 * CARD_WIDTH / 2;
     static const int TABLEROWS = 3;
 
     /*
     Margins between table edges and cards, paddings between cards
     */
-    static const int MARGIN_X_LEFT = 20;
-    static const int MARGIN_X_RIGHT = 5;
+    static const int MARGIN_LEFT = 20;
+    static const int MARGIN_RIGHT = 5;
+    static const int MARGIN_TOP = 20;
+    static const int MARGIN_BOTTOM = 20;
     static const int PADDING_X  = 35;
-    static const int PADDING_Y = 10;
+    static const int PADDING_Y = 30;
+
+    /*
+    Offset sizes when cards are stacked on each other in the grid
+    */
+    static const int STACKED_CARD_OFFSET_X = CARD_WIDTH / 3;
+    static const int STACKED_CARD_OFFSET_Y = 10;
+
+    /*
+    Width of the box line drawn in the margin around the active player's area.
+    */
+    static const int BOX_LINE_WIDTH = 10;
 
     /*
     Default background color, inactive mask and boarder gradient 
@@ -123,7 +135,7 @@ public:
     QPoint mapToGrid(const QPointF &mapPoint) const;
     QPointF closestGridPoint(const QPointF &point);
 
-    int clampValidTableRow(const int row);
+    static int clampValidTableRow(const int row);
 
     /**
        Removes a card from view.
