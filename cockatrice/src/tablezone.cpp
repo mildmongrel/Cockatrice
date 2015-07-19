@@ -32,10 +32,9 @@ TableZone::TableZone(Player *_p, QGraphicsItem *parent)
 
     updateBgPixmap();
 
-//    height = 2 * BOX_LINE_WIDTH + TABLEROWS * (CARD_HEIGHT + 20) + 2 * PADDING_Y;
     height = MARGIN_TOP + MARGIN_BOTTOM + TABLEROWS * CARD_HEIGHT + (TABLEROWS-1) * PADDING_Y;
-    width = MIN_WIDTH + MARGIN_LEFT + MARGIN_RIGHT;
-    currentMinimumWidth = MIN_WIDTH;
+    width = MIN_WIDTH;
+    currentMinimumWidth = width;
 
     setCacheMode(DeviceCoordinateCache);
 #if QT_VERSION < 0x050000
@@ -117,10 +116,12 @@ void TableZone::paintZoneOutline(QPainter *painter) {
    @painter QPainter object
  */
 void TableZone::paintLandDivider(QPainter *painter){
-    painter->setPen(QColor(255, 255, 255, 40));
-    qreal separatorY = 2 * (CARD_HEIGHT + 20 + PADDING_Y) + BOX_LINE_WIDTH - PADDING_Y / 2;
+    // Place the line 2 grid heights down then back it off just enough to allow
+    // some space between a 3-card stack and the land area.
+    qreal separatorY = MARGIN_TOP + 2 * (CARD_HEIGHT + PADDING_Y) - STACKED_CARD_OFFSET_Y / 2;
     if (isInverted())
         separatorY = height - separatorY;
+    painter->setPen(QColor(255, 255, 255, 40));
     painter->drawLine(QPointF(0, separatorY), QPointF(width, separatorY));
 }
 
@@ -274,14 +275,21 @@ CardItem *TableZone::takeCard(int position, int cardId, bool canResize)
 void TableZone::resizeToContents()
 {
     int xMax = 0;
+
+    // Find rightmost card position, which includes the left margin amount.
     for (int i = 0; i < cards.size(); ++i)
         if (cards[i]->pos().x() > xMax)
             xMax = (int) cards[i]->pos().x();
-    xMax += 2 * CARD_WIDTH;
-    if (xMax < MIN_WIDTH)
-        xMax = MIN_WIDTH;
-    currentMinimumWidth = xMax + MARGIN_LEFT + MARGIN_RIGHT;
+
+    // Minimum width is the rightmost card position plus enough room for
+    // another card with padding, then margin.
+    currentMinimumWidth = xMax + (2 * CARD_WIDTH) + PADDING_X + MARGIN_RIGHT;
+
+    if (currentMinimumWidth < MIN_WIDTH)
+        currentMinimumWidth = MIN_WIDTH;
+
     if (currentMinimumWidth != width) {
+qDebug() << "TableZone::resizeToContents cmw=" << currentMinimumWidth;
         prepareGeometryChange();
         width = currentMinimumWidth;
         emit sizeChanged();
@@ -317,26 +325,15 @@ QPointF TableZone::mapFromGrid(QPoint gridPoint) const
         x += gridPointWidth.value(gridPoint.y() * 1000 + i, CARD_WIDTH) + PADDING_X;
     
     if (isInverted())
-#if 0
-        gridPoint.setY(2 - gridPoint.y());
-#else
         gridPoint.setY(TABLEROWS - 1 - gridPoint.y());
-#endif
     
-#if 0
-    y = BOX_LINE_WIDTH + gridPoint.y() * (CARD_HEIGHT + PADDING_Y + 20) + (gridPoint.x() % TABLEROWS) * 10;
-#else
     // Start with margin plus stacked card offset
     y = MARGIN_TOP + (gridPoint.x() % 3) * STACKED_CARD_OFFSET_Y;
 
     // Add in card size and padding for each row
     for (int i = 0; i < gridPoint.y(); ++i)
         y += CARD_HEIGHT + PADDING_Y;
-#endif
-/*    
-    if (isInverted())
-        y = height - CARD_HEIGHT - y;
-*/    
+
     return QPointF(x, y);
 }
 
@@ -383,13 +380,13 @@ QPoint TableZone::mapToGrid(const QPointF &mapPoint) const
     int x = mapPoint.x();
     int y = mapPoint.y();
     
-    // Bound point within grid area.  The maximums include a length of card to
-    // disallow placing a card too far beyond the table.
+    // Bound point within grid area.  The maximums include a length of a grid
+    // point  disallow placing a card too far beyond the table.
     // TODO - is there a method in QPoint for this?
     const int xBoundMin = MARGIN_LEFT;
-    const int xBoundMax = width - MARGIN_RIGHT - CARD_WIDTH;
+    const int xBoundMax = width - MARGIN_RIGHT - CARD_WIDTH - PADDING_X;
     const int yBoundMin = MARGIN_TOP;
-    const int yBoundMax = height - MARGIN_BOTTOM - CARD_HEIGHT;
+    const int yBoundMax = height - MARGIN_BOTTOM - CARD_HEIGHT - PADDING_Y;
 
     if (x < xBoundMin)
         x = xBoundMin;
