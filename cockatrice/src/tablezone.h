@@ -26,10 +26,10 @@ private:
     /*
     Margins between table edges and cards, paddings between cards
     */
-    static const int MARGIN_LEFT = 20;
-    static const int MARGIN_RIGHT = 5;
-    static const int MARGIN_TOP = 20;
-    static const int MARGIN_BOTTOM = 20;
+    static const int MARGIN_LEFT = 30;
+    static const int MARGIN_RIGHT = 15;
+    static const int MARGIN_TOP = 30;
+    static const int MARGIN_BOTTOM = 30;
     static const int PADDING_X  = 35;
     static const int PADDING_Y = 30;
 
@@ -40,7 +40,7 @@ private:
     static const int STACKED_CARD_OFFSET_Y = 10;
 
     /*
-    Width of the box line drawn in the margin around the active player's area.
+    Width of the box line drawn in the margin around the active player's area
     */
     static const int BOX_LINE_WIDTH = 10;
 

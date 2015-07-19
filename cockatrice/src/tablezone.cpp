@@ -33,8 +33,8 @@ TableZone::TableZone(Player *_p, QGraphicsItem *parent)
     updateBgPixmap();
 
 //    height = 2 * BOX_LINE_WIDTH + TABLEROWS * (CARD_HEIGHT + 20) + 2 * PADDING_Y;
-    height = MARGIN_TOP + MARGIN_BOTTOM + 2 * BOX_LINE_WIDTH + TABLEROWS * CARD_HEIGHT + (TABLEROWS-1) * PADDING_Y;
-    width = MIN_WIDTH + MARGIN_LEFT + MARGIN_RIGHT + 2 * BOX_LINE_WIDTH;
+    height = MARGIN_TOP + MARGIN_BOTTOM + TABLEROWS * CARD_HEIGHT + (TABLEROWS-1) * PADDING_Y;
+    width = MIN_WIDTH + MARGIN_LEFT + MARGIN_RIGHT;
     currentMinimumWidth = MIN_WIDTH;
 
     setCacheMode(DeviceCoordinateCache);
@@ -280,7 +280,7 @@ void TableZone::resizeToContents()
     xMax += 2 * CARD_WIDTH;
     if (xMax < MIN_WIDTH)
         xMax = MIN_WIDTH;
-    currentMinimumWidth = xMax + MARGIN_LEFT + MARGIN_RIGHT + 2 * BOX_LINE_WIDTH;
+    currentMinimumWidth = xMax + MARGIN_LEFT + MARGIN_RIGHT;
     if (currentMinimumWidth != width) {
         prepareGeometryChange();
         width = currentMinimumWidth;
@@ -310,7 +310,7 @@ QPointF TableZone::mapFromGrid(QPoint gridPoint) const
     qreal x, y;
 
     // Start with margin plus stacked card offset
-    x = MARGIN_LEFT + BOX_LINE_WIDTH + (gridPoint.x() % 3) * STACKED_CARD_OFFSET_X;
+    x = MARGIN_LEFT + (gridPoint.x() % 3) * STACKED_CARD_OFFSET_X;
 
     // Add in width of grid point plus padding for each column
     for (int i = 0; i < gridPoint.x() / 3; ++i)
@@ -327,7 +327,7 @@ QPointF TableZone::mapFromGrid(QPoint gridPoint) const
     y = BOX_LINE_WIDTH + gridPoint.y() * (CARD_HEIGHT + PADDING_Y + 20) + (gridPoint.x() % TABLEROWS) * 10;
 #else
     // Start with margin plus stacked card offset
-    y = MARGIN_TOP + BOX_LINE_WIDTH + (gridPoint.x() % 3) * STACKED_CARD_OFFSET_Y;
+    y = MARGIN_TOP + (gridPoint.x() % 3) * STACKED_CARD_OFFSET_Y;
 
     // Add in card size and padding for each row
     for (int i = 0; i < gridPoint.y(); ++i)
@@ -386,10 +386,10 @@ QPoint TableZone::mapToGrid(const QPointF &mapPoint) const
     // Bound point within grid area.  The maximums include a length of card to
     // disallow placing a card too far beyond the table.
     // TODO - is there a method in QPoint for this?
-    const int xBoundMin = MARGIN_LEFT + BOX_LINE_WIDTH;
-    const int xBoundMax = width - (CARD_WIDTH + MARGIN_RIGHT + BOX_LINE_WIDTH);
-    const int yBoundMin = MARGIN_TOP + BOX_LINE_WIDTH;
-    const int yBoundMax = height - (CARD_HEIGHT + MARGIN_BOTTOM + BOX_LINE_WIDTH);
+    const int xBoundMin = MARGIN_LEFT;
+    const int xBoundMax = width - MARGIN_RIGHT - CARD_WIDTH;
+    const int yBoundMin = MARGIN_TOP;
+    const int yBoundMax = height - MARGIN_BOTTOM - CARD_HEIGHT;
 
     if (x < xBoundMin)
         x = xBoundMin;
