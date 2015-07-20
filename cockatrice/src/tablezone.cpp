@@ -169,30 +169,8 @@ void TableZone::reorganizeCards()
     QList<ArrowItem *> arrowsToUpdate;
     
     // Calculate table grid distortion so that the mapping functions work properly
-    QMap<int, int> gridPointStackCount;
-    for (int i = 0; i < cards.size(); ++i) {
-        const QPoint &gridPoint = cards[i]->getGridPos();
-qDebug() << "TableZone::reorganizeCards i=" << i << ", gridX=" << gridPoint.x() << ", gridY=" << gridPoint.y() << ", isInverted()=" << isInverted();
-        if (gridPoint.x() == -1)
-            continue;
-        
-        const int key = gridPoint.x() / 3 + gridPoint.y() * 1000;
-        gridPointStackCount.insert(key, gridPointStackCount.value(key, 0) + 1);
-    }
-    gridPointWidth.clear();
-    for (int i = 0; i < cards.size(); ++i) {
-        const QPoint &gridPoint = cards[i]->getGridPos();
-        if (gridPoint.x() == -1)
-            continue;
-        
-        const int key = gridPoint.x() / 3 + gridPoint.y() * 1000;
-        const int stackCount = gridPointStackCount.value(key, 0);
-        if (stackCount == 1)
-            gridPointWidth.insert(key, CARD_WIDTH * (1 + cards[i]->getAttachedCards().size() / 3.0));
-        else
-            gridPointWidth.insert(key, CARD_WIDTH * (1 + (stackCount - 1) / 3.0));
-    }
-    
+    computeGridPointWidths();
+
     for (int i = 0; i < cards.size(); ++i) {
         QPoint gridPoint = cards[i]->getGridPos();
         if (gridPoint.x() == -1)
@@ -310,6 +288,34 @@ CardItem *TableZone::getCardFromCoords(const QPointF &point) const
 {
     QPoint gridPoint = mapToGrid(point);
     return getCardFromGrid(gridPoint);
+}
+
+
+void TableZone::computeGridPointWidths()
+{
+    QMap<int, int> gridPointStackCount;
+    for (int i = 0; i < cards.size(); ++i) {
+        const QPoint &gridPoint = cards[i]->getGridPos();
+qDebug() << "TableZone::reorganizeCards i=" << i << ", gridX=" << gridPoint.x() << ", gridY=" << gridPoint.y() << ", isInverted()=" << isInverted();
+        if (gridPoint.x() == -1)
+            continue;
+        
+        const int key = gridPoint.x() / 3 + gridPoint.y() * 1000;
+        gridPointStackCount.insert(key, gridPointStackCount.value(key, 0) + 1);
+    }
+    gridPointWidth.clear();
+    for (int i = 0; i < cards.size(); ++i) {
+        const QPoint &gridPoint = cards[i]->getGridPos();
+        if (gridPoint.x() == -1)
+            continue;
+        
+        const int key = gridPoint.x() / 3 + gridPoint.y() * 1000;
+        const int stackCount = gridPointStackCount.value(key, 0);
+        if (stackCount == 1)
+            gridPointWidth.insert(key, CARD_WIDTH * (1 + cards[i]->getAttachedCards().size() / 3.0));
+        else
+            gridPointWidth.insert(key, CARD_WIDTH * (1 + (stackCount - 1) / 3.0));
+    }
 }
 
 

@@ -136,8 +136,6 @@ public:
     CardItem *getCardFromCoords(const QPointF &point) const;
 
     QPointF closestGridPoint(const QPointF &point);
-    QPointF mapFromGrid(QPoint gridPoint) const;
-    QPoint mapToGrid(const QPointF &mapPoint) const;
 
     static int clampValidTableRow(const int row);
 
@@ -168,6 +166,17 @@ protected:
 private:
     void paintZoneOutline(QPainter *painter);
     void paintLandDivider(QPainter *painter);
+
+    /*
+    Calculates table grid widths so that the mapping functions work properly
+    */
+    void computeGridPointWidths();
+
+    /*
+    Mapping functions for points to/from gridpoints.
+    */
+    QPointF mapFromGrid(QPoint gridPoint) const;
+    QPoint mapToGrid(const QPointF &mapPoint) const;
 };
 
 #endif
