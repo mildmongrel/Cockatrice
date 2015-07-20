@@ -338,42 +338,6 @@ QPointF TableZone::mapFromGrid(QPoint gridPoint) const
 }
 
 
-#if 0
-QPoint TableZone::mapToGrid(const QPointF &mapPoint) const
-{
-    qreal x = mapPoint.x() - MARGIN_X_LEFT;
-    qreal y = mapPoint.y();
-/*    if (isInverted())
-        y = height - y;
-*/    y -= BOX_LINE_WIDTH;
-    
-    if (x < 0)
-        x = 0;
-    else if (x > width - CARD_WIDTH - MARGIN_X_LEFT)
-        x = width - CARD_WIDTH - MARGIN_X_LEFT;
-    if (y < 0)
-        y = 0;
-    else if (y > height - CARD_HEIGHT)
-        y = height - CARD_HEIGHT;
-    
-//    int resultY = round(y / (CARD_HEIGHT + PADDING_Y + 20));
-    int resultY = round(y / (CARD_HEIGHT + PADDING_Y));
-    if (isInverted())
-        resultY = TABLEROWS - 1 - resultY;
-
-    int baseX = -1;
-    qreal oldTempX = 0, tempX = 0;
-    do {
-        ++baseX;
-        oldTempX = tempX;
-        tempX += gridPointWidth.value(resultY * 1000 + baseX, CARD_WIDTH) + PADDING_X;
-    } while (tempX < x + 1);
-    
-    qreal xdiff = x - oldTempX;
-    int resultX = baseX * 3 + qMin((int) floor(xdiff * 3 / CARD_WIDTH), 2);
-    return QPoint(resultX, resultY);
-}
-#else
 QPoint TableZone::mapToGrid(const QPointF &mapPoint) const
 {
     // TODO: can this whole function be done with a QPoint instead of two ints?
@@ -426,7 +390,6 @@ QPoint TableZone::mapToGrid(const QPointF &mapPoint) const
 
     return QPoint(resultX, resultY);
 }
-#endif
 
 
 QPointF TableZone::closestGridPoint(const QPointF &point)

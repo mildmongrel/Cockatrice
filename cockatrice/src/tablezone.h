@@ -135,9 +135,9 @@ public:
      */
     CardItem *getCardFromCoords(const QPointF &point) const;
 
+    QPointF closestGridPoint(const QPointF &point);
     QPointF mapFromGrid(QPoint gridPoint) const;
     QPoint mapToGrid(const QPointF &mapPoint) const;
-    QPointF closestGridPoint(const QPointF &point);
 
     static int clampValidTableRow(const int row);
 
