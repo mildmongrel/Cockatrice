@@ -59,7 +59,6 @@ private:
     /*
        Size and shape variables
      */
-    QMap<int, int> cardStackWidth;
     int width;
     int height;
     int currentMinimumWidth;
@@ -67,7 +66,7 @@ private:
     /*
     Internal cache for widths of stacks of cards by row and column.
     */
-// QMap can't use a type without operator< as key    QMap<QPoint, int> stackedGridPointWidth;
+    QMap<int, int> cardStackWidth;
 
     /*
        Holds any custom background image for the TableZone
