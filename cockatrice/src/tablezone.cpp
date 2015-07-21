@@ -168,8 +168,8 @@ void TableZone::reorganizeCards()
 {
     QList<ArrowItem *> arrowsToUpdate;
     
-    // Calculate table grid distortion so that the mapping functions work properly
-    computeGridPointWidths();
+    // Calculate card stack widths so mapping functions work properly
+    computeCardStackWidths();
 
     for (int i = 0; i < cards.size(); ++i) {
         QPoint gridPoint = cards[i]->getGridPos();
@@ -291,30 +291,36 @@ CardItem *TableZone::getCardFromCoords(const QPointF &point) const
 }
 
 
-void TableZone::computeGridPointWidths()
+void TableZone::computeCardStackWidths()
 {
-    QMap<int, int> gridPointStackCount;
+    // Each card stack is three grid points worth of card locations.
+    // First pass: compute the number of cards at each card stack.
+    QMap<int, int> cardStackCount;
     for (int i = 0; i < cards.size(); ++i) {
         const QPoint &gridPoint = cards[i]->getGridPos();
 qDebug() << "TableZone::reorganizeCards i=" << i << ", gridX=" << gridPoint.x() << ", gridY=" << gridPoint.y() << ", isInverted()=" << isInverted();
         if (gridPoint.x() == -1)
             continue;
         
-        const int key = gridPoint.x() / 3 + gridPoint.y() * 1000;
-        gridPointStackCount.insert(key, gridPointStackCount.value(key, 0) + 1);
+//        const int key = gridPoint.x() / 3 + gridPoint.y() * 1000;
+        const int key = getCardStackMapKey(gridPoint.x() / 3, gridPoint.y());
+        cardStackCount.insert(key, cardStackCount.value(key, 0) + 1);
     }
-    gridPointWidth.clear();
+
+    // Second pass: compute the width at each card stack.
+    cardStackWidth.clear();
     for (int i = 0; i < cards.size(); ++i) {
         const QPoint &gridPoint = cards[i]->getGridPos();
         if (gridPoint.x() == -1)
             continue;
         
-        const int key = gridPoint.x() / 3 + gridPoint.y() * 1000;
-        const int stackCount = gridPointStackCount.value(key, 0);
+//        const int key = gridPoint.x() / 3 + gridPoint.y() * 1000;
+        const int key = getCardStackMapKey(gridPoint.x() / 3, gridPoint.y());
+        const int stackCount = cardStackCount.value(key, 0);
         if (stackCount == 1)
-            gridPointWidth.insert(key, CARD_WIDTH * (1 + cards[i]->getAttachedCards().size() / 3.0));
+            cardStackWidth.insert(key, CARD_WIDTH * (1 + cards[i]->getAttachedCards().size() / 3.0));
         else
-            gridPointWidth.insert(key, CARD_WIDTH * (1 + (stackCount - 1) / 3.0));
+            cardStackWidth.insert(key, CARD_WIDTH * (1 + (stackCount - 1) / 3.0));
     }
 }
 
@@ -326,9 +332,13 @@ QPointF TableZone::mapFromGrid(QPoint gridPoint) const
     // Start with margin plus stacked card offset
     x = MARGIN_LEFT + (gridPoint.x() % 3) * STACKED_CARD_OFFSET_X;
 
-    // Add in width of grid point plus padding for each column
+    // Add in width of card stack plus padding for each column
     for (int i = 0; i < gridPoint.x() / 3; ++i)
-        x += gridPointWidth.value(gridPoint.y() * 1000 + i, CARD_WIDTH) + PADDING_X;
+//        x += gridPointWidth.value(gridPoint.y() * 1000 + i, CARD_WIDTH) + PADDING_X;
+    {
+        const int key = getCardStackMapKey(i, gridPoint.y());
+        x += cardStackWidth.value(key, CARD_WIDTH) + PADDING_X;
+    }
     
     if (isInverted())
         gridPoint.setY(TABLEROWS - 1 - gridPoint.y());
@@ -351,7 +361,7 @@ QPoint TableZone::mapToGrid(const QPointF &mapPoint) const
     int y = mapPoint.y();
     
     // Bound point within grid area.  The maximums include a length of a grid
-    // point  disallow placing a card too far beyond the table.
+    // point to disallow placing a card too far beyond the table.
     // TODO - is there a method in QPoint for this?
     const int xBoundMin = MARGIN_LEFT;
     const int xBoundMax = width - MARGIN_RIGHT - CARD_WIDTH - PADDING_X;
@@ -382,13 +392,15 @@ QPoint TableZone::mapToGrid(const QPointF &mapPoint) const
     if (isInverted())
         resultY = TABLEROWS - 1 - resultY;
 
-    // Walk grid point widths and accumulate the amount until we reach our point.
+    // Walk card stack widths and accumulate the amount until we reach our point.
     int baseX = -1;
     int oldTempX = 0, tempX = 0;
     do {
         ++baseX;
         oldTempX = tempX;
-        tempX += gridPointWidth.value(resultY * 1000 + baseX, CARD_WIDTH) + PADDING_X;
+//        tempX += gridPointWidth.value(resultY * 1000 + baseX, CARD_WIDTH) + PADDING_X;
+        const int key = getCardStackMapKey(baseX, resultY);
+        tempX += cardStackWidth.value(key, CARD_WIDTH) + PADDING_X;
     } while (tempX < x + 1);
     
     int xdiff = x - oldTempX;

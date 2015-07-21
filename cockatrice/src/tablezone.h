@@ -59,10 +59,15 @@ private:
     /*
        Size and shape variables
      */
-    QMap<int, int> gridPointWidth;
+    QMap<int, int> cardStackWidth;
     int width;
     int height;
     int currentMinimumWidth;
+
+    /*
+    Internal cache for widths of stacks of cards by row and column.
+    */
+// QMap can't use a type without operator< as key    QMap<QPoint, int> stackedGridPointWidth;
 
     /*
        Holds any custom background image for the TableZone
@@ -168,15 +173,20 @@ private:
     void paintLandDivider(QPainter *painter);
 
     /*
-    Calculates table grid widths so that the mapping functions work properly
+    Calculates card stack widths so mapping functions work properly
     */
-    void computeGridPointWidths();
+    void computeCardStackWidths();
 
     /*
     Mapping functions for points to/from gridpoints.
     */
     QPointF mapFromGrid(QPoint gridPoint) const;
     QPoint mapToGrid(const QPointF &mapPoint) const;
+
+    /*
+    Helper function to create a single key from a card stack location.
+    */
+    int getCardStackMapKey (int x, int y) const { return x + (y * 1000); }
 };
 
 #endif
