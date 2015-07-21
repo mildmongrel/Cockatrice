@@ -2,7 +2,6 @@
 #include <QSet>
 #include <QGraphicsScene>
 #include <cmath>
-#include <QDebug>
 #ifdef _WIN32
 #include "round.h"
 #endif /* _WIN32 */
@@ -267,7 +266,6 @@ void TableZone::resizeToContents()
         currentMinimumWidth = MIN_WIDTH;
 
     if (currentMinimumWidth != width) {
-qDebug() << "TableZone::resizeToContents cmw=" << currentMinimumWidth;
         prepareGeometryChange();
         width = currentMinimumWidth;
         emit sizeChanged();
@@ -298,11 +296,9 @@ void TableZone::computeCardStackWidths()
     QMap<int, int> cardStackCount;
     for (int i = 0; i < cards.size(); ++i) {
         const QPoint &gridPoint = cards[i]->getGridPos();
-qDebug() << "TableZone::reorganizeCards i=" << i << ", gridX=" << gridPoint.x() << ", gridY=" << gridPoint.y() << ", isInverted()=" << isInverted();
         if (gridPoint.x() == -1)
             continue;
         
-//        const int key = gridPoint.x() / 3 + gridPoint.y() * 1000;
         const int key = getCardStackMapKey(gridPoint.x() / 3, gridPoint.y());
         cardStackCount.insert(key, cardStackCount.value(key, 0) + 1);
     }
@@ -314,7 +310,6 @@ qDebug() << "TableZone::reorganizeCards i=" << i << ", gridX=" << gridPoint.x() 
         if (gridPoint.x() == -1)
             continue;
         
-//        const int key = gridPoint.x() / 3 + gridPoint.y() * 1000;
         const int key = getCardStackMapKey(gridPoint.x() / 3, gridPoint.y());
         const int stackCount = cardStackCount.value(key, 0);
         if (stackCount == 1)
@@ -334,7 +329,6 @@ QPointF TableZone::mapFromGrid(QPoint gridPoint) const
 
     // Add in width of card stack plus padding for each column
     for (int i = 0; i < gridPoint.x() / 3; ++i)
-//        x += gridPointWidth.value(gridPoint.y() * 1000 + i, CARD_WIDTH) + PADDING_X;
     {
         const int key = getCardStackMapKey(i, gridPoint.y());
         x += cardStackWidth.value(key, CARD_WIDTH) + PADDING_X;
@@ -398,7 +392,6 @@ QPoint TableZone::mapToGrid(const QPointF &mapPoint) const
     do {
         ++baseX;
         oldTempX = tempX;
-//        tempX += gridPointWidth.value(resultY * 1000 + baseX, CARD_WIDTH) + PADDING_X;
         const int key = getCardStackMapKey(baseX, resultY);
         tempX += cardStackWidth.value(key, CARD_WIDTH) + PADDING_X;
     } while (tempX < x + 1);
