@@ -350,26 +350,18 @@ QPointF TableZone::mapFromGrid(QPoint gridPoint) const
 
 QPoint TableZone::mapToGrid(const QPointF &mapPoint) const
 {
-    // TODO: can this whole function be done with a QPoint instead of two ints?
     int x = mapPoint.x();
     int y = mapPoint.y();
-    
+
     // Bound point within grid area.  The maximums include a length of a grid
     // point to disallow placing a card too far beyond the table.
-    // TODO - is there a method in QPoint for this?
     const int xBoundMin = MARGIN_LEFT;
     const int xBoundMax = width - MARGIN_RIGHT - CARD_WIDTH - PADDING_X;
     const int yBoundMin = MARGIN_TOP;
     const int yBoundMax = height - MARGIN_BOTTOM - CARD_HEIGHT - PADDING_Y;
 
-    if (x < xBoundMin)
-        x = xBoundMin;
-    else if (x > xBoundMax)
-        x = xBoundMax;
-    if (y < yBoundMin)
-        y = yBoundMin;
-    else if (y > yBoundMax)
-        y = yBoundMax;
+    x = qBound(xBoundMin, x, xBoundMax);
+    y = qBound(yBoundMin, y, yBoundMax);
 
     // Offset point by the boundary values to reference point within grid area.
     x -= xBoundMin;
