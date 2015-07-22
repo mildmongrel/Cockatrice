@@ -1,7 +1,6 @@
 #include <QPainter>
 #include <QSet>
 #include <QGraphicsScene>
-#include <QDebug>
 #include <cmath>
 #ifdef _WIN32
 #include "round.h"
@@ -366,38 +365,6 @@ QPoint TableZone::mapToGrid(const QPointF &mapPoint) const
     if (isInverted())
         gridPointY = TABLEROWS - 1 - gridPointY;
 
-
-
-#if 0
-    int x = mapPoint.x();
-
-    // Bound point within grid area.  The maximums include a length of a grid
-    // point to disallow placing a card too far beyond the table.
-    const int xBoundMin = MARGIN_LEFT;
-    const int xBoundMax = width - MARGIN_RIGHT - CARD_WIDTH - PADDING_X;
-
-    x = qBound(xBoundMin, x, xBoundMax);
-
-    // Offset point by the boundary values to reference point within grid area.
-    x -= xBoundMin;
-    
-    // Offset point by half the distance between grid points to effectively
-    // "round" to the nearest grid point in below calculations.
-    x += (CARD_WIDTH + PADDING_X) / 2;
-
-    // Walk card stack widths and accumulate the amount until we reach our point.
-    int baseX = -1;
-    int oldTempX = 0, tempX = 0;
-    do {
-        ++baseX;
-        oldTempX = tempX;
-        const int key = getCardStackMapKey(baseX, resultY);
-        tempX += cardStackWidth.value(key, CARD_WIDTH) + PADDING_X;
-    } while (tempX < x + 1);
-    
-    int xdiff = x - oldTempX;
-    int resultX = baseX * 3 + qMin((int) floor(xdiff * 3 / CARD_WIDTH), 2);
-#else
     // Calculating the x-coordinate of the grid space requires adding up the
     // widths of each card stack along the row.
 
@@ -419,23 +386,11 @@ QPoint TableZone::mapToGrid(const QPointF &mapPoint) const
     }
     int stackCol = qMax(nextStackCol - 1, 0);
 
-    // Have the stack column, need to refine to the grid column.
-    int xdiff = x - xStack;
-    int gridPointX = stackCol * 3 + qMin((int) floor(xdiff * 3 / CARD_WIDTH), 2);
-    int g1 = qMin((int) floor(xdiff * 3 / CARD_WIDTH), 2);
-    qDebug() << "g1=" << g1;
-
-    int xdiff2 = x - xStack;
-//    xdiff2 -= PADDING_X + CARD_WIDTH;
-    //int gridPointX2 = stackCol * 3 + xdiff2 / STACKED_CARD_OFFSET_X;
-//    qDebug() << "g2=" << qMin(xdiff2 / (3 * STACKED_CARD_OFFSET_X), 2);
-    int g2 = qMin(xdiff2 / STACKED_CARD_OFFSET_X, 2);
-    qDebug() << "g2=" << g2;
-
-    if (g1 != g2)
-        qDebug() << "!! g1 != g2=";
-
-#endif
+    // Have the stack column, need to refine to the grid column.  Take the
+    // difference between the point and the stack point and divide by stacked
+    // card offsets.
+    int xDiff = x - xStack;
+    int gridPointX = stackCol * 3 + qMin(xDiff / STACKED_CARD_OFFSET_X, 2);
 
     return QPoint(gridPointX, gridPointY);
 }
