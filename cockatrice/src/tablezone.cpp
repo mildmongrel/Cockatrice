@@ -180,7 +180,7 @@ void TableZone::reorganizeCards()
         qreal y = mapPoint.y();
         
         int numberAttachedCards = cards[i]->getAttachedCards().size();
-        qreal actualX = x + numberAttachedCards * CARD_WIDTH / 3.0;
+        qreal actualX = x + numberAttachedCards * STACKED_CARD_OFFSET_X;
         qreal actualY = y;
         if (numberAttachedCards)
             actualY += 15;
@@ -193,7 +193,7 @@ void TableZone::reorganizeCards()
         while (attachedCardIterator.hasNext()) {
             ++j;
             CardItem *attachedCard = attachedCardIterator.next();
-            qreal childX = actualX - j * CARD_WIDTH / 3.0;
+            qreal childX = actualX - j * STACKED_CARD_OFFSET_X;
             qreal childY = y + 5;
             attachedCard->setPos(childX, childY);
             attachedCard->setRealZValue((childY + CARD_HEIGHT) * 100000 + (childX + 1) * 100);
@@ -313,9 +313,9 @@ void TableZone::computeCardStackWidths()
         const int key = getCardStackMapKey(gridPoint.x() / 3, gridPoint.y());
         const int stackCount = cardStackCount.value(key, 0);
         if (stackCount == 1)
-            cardStackWidth.insert(key, CARD_WIDTH * (1 + cards[i]->getAttachedCards().size() / 3.0));
+            cardStackWidth.insert(key, CARD_WIDTH + cards[i]->getAttachedCards().size() * STACKED_CARD_OFFSET_X);
         else
-            cardStackWidth.insert(key, CARD_WIDTH * (1 + (stackCount - 1) / 3.0));
+            cardStackWidth.insert(key, CARD_WIDTH + (stackCount - 1) * STACKED_CARD_OFFSET_X);
     }
 }
 
